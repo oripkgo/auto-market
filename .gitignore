@@ -1,0 +1,61 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env
+.env.*     # 환경별 dotenv 파일 (.env.development 등)
+
+# OS-specific files
+.DS_Store      # macOS
+Thumbs.db      # Windows
+
+# Editor & IDE folders
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Optional npm cache directory
+.npm/
+
+# Build outputs
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Binaries
+*.exe
+*.out
+*.app
+
+# PM2 process logs
+pids/
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# Parcel, Next.js or other frameworks (optional)
+.cache/
+.next/
+out/
