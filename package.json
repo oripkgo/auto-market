@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "pm2 start ./bin/www --name 'auto-trade-app'",
+    "stop": "pm2 stop 'auto-trade-app'",
+    "restart": "pm2 restart 'auto-trade-app'",
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
@@ -14,7 +16,8 @@
     "express": "~4.16.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "~1.9.1",
-    "mysql2": "^3.14.2"
+    "mysql2": "^3.14.2",
+    "pm2": "^6.0.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
