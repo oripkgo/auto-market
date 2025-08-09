@@ -1,79 +1,79 @@
 const pool = require('../config/db');
 
-const findAllWithPaging = async ({page = 1, limit = 10}) => {
+// 페이징 조회
+const findAllWithPaging = async ({ page = 1, limit = 10 }) => {
     const offset = (Number(page) - 1) * Number(limit);
 
-    const [users] = await pool.query(
+    const [rows] = await pool.query(
         `SELECT
              id,
-             email,
-             password_hash AS passwordHash,
-             name,
-             phone_number AS phoneNumber,
-             gender,
-             address,
-             level,
+             user_id AS userId,
+             consent_given AS consentGiven,
+             consent_version AS consentVersion,
+             consent_at AS consentAt,
+             ip_address AS ipAddress,
+             user_agent AS userAgent,
              created_at AS createdAt,
              updated_at AS updatedAt,
              deleted_at AS deletedAt
-         FROM users
+         FROM privacy_consents
          WHERE deleted_at IS NULL
-         ORDER BY id LIMIT ?
+         ORDER BY id
+         LIMIT ?
          OFFSET ?`,
         [Number(limit), Number(offset)]
     );
 
     const [countResult] = await pool.query(
         `SELECT COUNT(*) AS total
-         FROM users
+         FROM privacy_consents
          WHERE deleted_at IS NULL`
     );
 
     return {
-        data: users,
+        data: rows,
         total: countResult[0].total,
         page: Number(page),
         limit: Number(limit)
     };
 };
 
-
+// 전체 조회
 const findAll = async () => {
     const [rows] = await pool.query(
         `SELECT
              id,
-             email,
-             password_hash AS passwordHash,
-             name,
-             phone_number AS phoneNumber,
-             gender,
-             address,
-             level,
+             user_id AS userId,
+             consent_given AS consentGiven,
+             consent_version AS consentVersion,
+             consent_at AS consentAt,
+             ip_address AS ipAddress,
+             user_agent AS userAgent,
              created_at AS createdAt,
              updated_at AS updatedAt,
              deleted_at AS deletedAt
-         FROM users
+         FROM privacy_consents
          WHERE deleted_at IS NULL
          ORDER BY id`
     );
     return rows;
 };
 
+// ID로 조회
 const findById = async (id) => {
     const [rows] = await pool.query(
         `SELECT
              id,
-             email,
-             password_hash AS passwordHash,
-             name,
-             phone_number AS phoneNumber,
-             gender,
-             address,
-             level,
+             user_id AS userId,
+             consent_given AS consentGiven,
+             consent_version AS consentVersion,
+             consent_at AS consentAt,
+             ip_address AS ipAddress,
+             user_agent AS userAgent,
              created_at AS createdAt,
              updated_at AS updatedAt,
              deleted_at AS deletedAt
-         FROM users
+         FROM privacy_consents
          WHERE id = ?
            AND deleted_at IS NULL`,
         [id]
@@ -81,54 +81,35 @@ const findById = async (id) => {
     return rows[0] || null;
 };
 
-const findByEmail = async (email) => {
-    const [rows] = await pool.query(
-        `SELECT
-             id,
-             email,
-             password_hash AS passwordHash,
-             name,
-             phone_number AS phoneNumber,
-             gender,
-             address,
-             level,
-             created_at AS createdAt,
-             updated_at AS updatedAt,
-             deleted_at AS deletedAt
-         FROM users
-         WHERE email = ?
-           AND deleted_at IS NULL`,
-        [email]
-    );
-    return rows[0] || null;
-};
-
-const insert = async (user, trx) => {
+// 삽입
+const insert = async (consent, trx) => {
     const {
-        email,
-        password_hash,
-        name = null,
-        phone_number = null,
-        gender = null,
-        address = null
-    } = user;
+        user_id,
+        consent_given,
+        consent_version,
+        consent_at = new Date(),
+        ip_address = null,
+        user_agent = null
+    } = consent;
 
     const [result] = await (trx || pool).query(
-        `INSERT INTO users (email, password_hash, name, phone_number, gender, address)
+        `INSERT INTO privacy_consents
+         (user_id, consent_given, consent_version, consent_at, ip_address, user_agent)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [email, password_hash, name, phone_number, gender, address]
+        [user_id, consent_given, consent_version, consent_at, ip_address, user_agent]
     );
-    return result.insertId
+    return findById(result.insertId);
 };
 
-const update = async (id, userData) => {
+// 업데이트
+const update = async (id, consentData) => {
     const fields = [];
     const values = [];
 
-    for (const key of ['email', 'password_hash', 'name', 'phone_number', 'gender', 'address']) {
-        if (userData[key] !== undefined) {
+    for (const key of ['user_id', 'consent_given', 'consent_version', 'consent_at', 'ip_address', 'user_agent']) {
+        if (consentData[key] !== undefined) {
             fields.push(`${key} = ?`);
-            values.push(userData[key]);
+            values.push(consentData[key]);
         }
     }
 
@@ -136,7 +117,7 @@ const update = async (id, userData) => {
 
     values.push(id);
 
-    const sql = `UPDATE users
+    const sql = `UPDATE privacy_consents
                  SET ${fields.join(', ')},
                      updated_at = NOW()
                  WHERE id = ?
@@ -148,9 +129,10 @@ const update = async (id, userData) => {
     return findById(id);
 };
 
+// 소프트 삭제
 const remove = async (id) => {
     const [result] = await pool.query(
-        `UPDATE users
+        `UPDATE privacy_consents
          SET deleted_at = NOW()
          WHERE id = ?
            AND deleted_at IS NULL`,
@@ -163,7 +145,6 @@ module.exports = {
     findAllWithPaging,
     findAll,
     findById,
-    findByEmail,
     insert,
     update,
     remove

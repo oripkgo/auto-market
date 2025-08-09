@@ -14,13 +14,9 @@ const getUserByEmail = async (email) => {
 };
 
 
-const createUser = async (name, email) => {
-    // 새 id 생성 (간단하게 마지막 id + 1)
-    const users = await userMapper.findAll();
-    const newId = users.length ? users[users.length - 1].id + 1 : 1;
-
-    const newUser = {id: newId, name, email};
-    return await userMapper.insert(newUser);
+const createUser = async ({email, passwordHash, name, phone, gender, agreePrivacy},conn) => {
+    const newUser = {name, email, password_hash: passwordHash, phone_number: phone, gender: gender || 'other'};
+    return await userMapper.insert(newUser, conn);
 };
 
 const updateUser = async (id, {name, email}) => {

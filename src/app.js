@@ -1,4 +1,5 @@
 var express = require('express');
+const cors = require('cors');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -24,6 +25,18 @@ async function testDbConnection() {
 }
 
 testDbConnection();
+
+app.use(cors({
+    origin: true, // 요청한 Origin을 그대로 반환 → 사실상 모든 오리진 허용
+    methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization'],
+    credentials: true
+}));
+
+app.use((req, res, next) => {
+    res.header('Vary', 'Origin'); // 캐시 안정성 확보
+    next();
+});
 
 app.use(logger('dev'));
 app.use(express.json());

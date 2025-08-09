@@ -5,25 +5,37 @@ const findAllWithCount = async ({category = null, page = 1, limit = 10}) => {
     const offset = (Number(page) - 1) * Number(limit);
     const params = [];
 
-    let whereClause = `WHERE deleted_at IS NULL`;
+    let whereClause = `WHERE ps.deleted_at IS NULL`;
 
     if (category) {
-        whereClause += ` AND category = ?`;
+        whereClause += ` AND ps.category = ?`;
         params.push(category);
     }
 
     // 게시글 목록 조회
     const dataQuery = `
-        SELECT *
-        FROM posts ${whereClause}
-        ORDER BY created_at DESC LIMIT ?
+        SELECT
+            ps.id,
+            ps.user_id AS userId,
+            us.name AS userName,
+            ps.category,
+            ps.title,
+            ps.content,
+            ps.views,
+            ps.created_at AS createdAt,
+            ps.updated_at AS updatedAt,
+            ps.deleted_at AS deletedAt
+        FROM posts ps
+        LEFT JOIN users us on us.id = ps.user_id
+            ${whereClause}
+        ORDER BY ps.created_at DESC LIMIT ?
         OFFSET ?
     `;
 
     // 전체 카운트 조회
     const countQuery = `
         SELECT COUNT(*) AS total
-        FROM posts ${whereClause}
+        FROM posts ps ${whereClause}
     `;
 
     const [dataRows] = await pool.query(dataQuery, [...params, Number(limit), Number(offset)]);
@@ -42,17 +54,29 @@ const findAll = async ({category = null, page = 1, limit = 10}) => {
     const offset = (Number(page) - 1) * Number(limit);
 
     const queryParams = [];
-    let whereClause = `WHERE deleted_at IS NULL`;
+    let whereClause = `WHERE ps.deleted_at IS NULL`;
 
     if (category) {
-        whereClause += ` AND category = ?`;
+        whereClause += ` AND ps.category = ?`;
         queryParams.push(category);
     }
 
     const query = `
-        SELECT *
-        FROM posts ${whereClause}
-        ORDER BY created_at DESC LIMIT ?
+        SELECT
+            ps.id,
+            ps.user_id AS userId,
+            us.name AS userName,
+            ps.category,
+            ps.title,
+            ps.content,
+            ps.views,
+            ps.created_at AS createdAt,
+            ps.updated_at AS updatedAt,
+            ps.deleted_at AS deletedAt
+        FROM posts ps
+        LEFT JOIN users us on us.id = ps.user_id
+            ${whereClause}
+        ORDER BY ps.created_at DESC LIMIT ?
         OFFSET ?
     `;
 
@@ -64,10 +88,21 @@ const findAll = async ({category = null, page = 1, limit = 10}) => {
 
 const findById = async (id) => {
     const [rows] = await pool.query(
-        `SELECT *
-         FROM posts
-         WHERE id = ?
-           AND deleted_at IS NULL`,
+        `SELECT
+             ps.id,
+             ps.user_id AS userId,
+             us.name AS userName,
+             ps.category,
+             ps.title,
+             ps.content,
+             ps.views,
+             ps.created_at AS createdAt,
+             ps.updated_at AS updatedAt,
+             ps.deleted_at AS deletedAt
+         FROM posts ps
+         LEFT JOIN users us on us.id = ps.user_id
+         WHERE ps.id = ?
+           AND ps.deleted_at IS NULL`,
         [id]
     );
     return rows[0] || null;
@@ -75,31 +110,42 @@ const findById = async (id) => {
 
 const insert = async (post) => {
     const {
-        user_id = null,
-        user_name = null,
+        userId = null,
         category,
         title,
         content
     } = post;
 
     const [result] = await pool.query(
-        `INSERT INTO posts (user_id, user_name, category, title, content)
-         VALUES (?, ?, ?, ?, ?)`,
-        [user_id, user_name, category, title, content]
+        `INSERT INTO posts (user_id, category, title, content)
+         VALUES (?, ?, ?, ?)`,
+        [userId, category, title, content]
     );
 
     return findById(result.insertId);
 };
 
 const update = async (id, postData) => {
+    const { userId, category, title, content } = postData;
+
     const fields = [];
     const values = [];
 
-    for (const key of ['user_id', 'user_name', 'category', 'title', 'content']) {
-        if (postData[key] !== undefined) {
-            fields.push(`${key} = ?`);
-            values.push(postData[key]);
-        }
+    if (userId !== undefined) {
+        fields.push("user_id = ?");
+        values.push(userId);
+    }
+    if (category !== undefined) {
+        fields.push("category = ?");
+        values.push(category);
+    }
+    if (title !== undefined) {
+        fields.push("title = ?");
+        values.push(title);
+    }
+    if (content !== undefined) {
+        fields.push("content = ?");
+        values.push(content);
     }
 
     if (fields.length === 0) return null;
@@ -118,6 +164,31 @@ const update = async (id, postData) => {
     return findById(id);
 };
 
+
+const updateViews = async (id) => {
+
+    const fields = [];
+    const values = [];
+
+    fields.push("views = views + 1");
+
+    if (fields.length === 0) return null;
+
+    values.push(id);
+
+    const sql = `UPDATE posts
+                 SET ${fields.join(', ')},
+                     updated_at = NOW()
+                 WHERE id = ?
+                   AND deleted_at IS NULL`;
+    const [result] = await pool.query(sql, values);
+
+    if (result.affectedRows === 0) return null;
+
+    return findById(id);
+};
+
+
 const softDelete = async (id) => {
     const [result] = await pool.query(
         `UPDATE posts
@@ -135,5 +206,6 @@ module.exports = {
     findById,
     insert,
     update,
+    updateViews,
     softDelete
 };

@@ -40,8 +40,9 @@ exports.getPostById = async (req, res, next) => {
 
 exports.createPost = async (req, res, next) => {
     try {
+        const userId = req.user.userId;
         const body = new PostDto(req.body);
-        const newPost = await postService.createPost({...body});
+        const newPost = await postService.createPost({...body, userId});
         res.status(201).json(newPost);
     } catch (err) {
         err.status = err.status || 400;
@@ -52,14 +53,15 @@ exports.createPost = async (req, res, next) => {
 
 exports.updatePost = async (req, res, next) => {
     try {
-        const id = Number(req.params.id);
+        const userId = req.user.userId;
+        const id = Number(req.body.id);
         if (isNaN(id)) {
             const error = new Error('유효하지 않은 ID입니다.');
             error.status = 400;
             throw error;
         }
 
-        const body = new PostDto(req.body);
+        const body = new PostDto({...req.body, userId});
         const updatedPost = await postService.updatePost(id, body);
 
         if (!updatedPost) {
@@ -83,6 +85,15 @@ exports.deletePost = async (req, res, next) => {
             error.status = 400;
             throw error;
         }
+
+        const post = await postService.getPostById(id);
+
+        if (post.userId !== req.user.userId) {
+            const error = new Error('권한이 없습니다.');
+            error.status = 403;
+            throw error;
+        }
+
 
         const deleted = await postService.deletePost(id);
         if (!deleted) {

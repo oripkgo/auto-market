@@ -53,7 +53,7 @@ exports.createUser = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
     try {
-        const id = Number(req.params.id);
+        const id = Number(req.user.userId);
         if (isNaN(id)) {
             const error = new Error('유효하지 않은 ID입니다.');
             error.status = 400;

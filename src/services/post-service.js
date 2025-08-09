@@ -20,6 +20,10 @@ const updatePost = async (id, postData) => {
     return await postMapper.update(id, postData);
 };
 
+const updatePostViewCount = async (id) => {
+    return await postMapper.updateViews(id);
+};
+
 const deletePost = async (id) => {
     return await postMapper.softDelete(id);
 };

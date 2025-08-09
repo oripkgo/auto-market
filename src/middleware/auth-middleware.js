@@ -1,11 +1,20 @@
 const jwtUtil = require('../utils/jwt-util');
 
-// 검증을 제외할 경로 목록
-const openPaths = ['/sign/in', '/sign/up', '/posts/free', '/posts/inquiry'];
+// 검증을 제외할 경로와 메소드 목록
+const openRoutes = [
+    { path: '/sign/in', method: 'POST' },
+    { path: '/sign/up', method: 'POST' },
+    { path: '/posts/free', method: 'GET' },
+    { path: '/posts/notice', method: 'GET' },
+    { path: '/posts/review', method: 'GET' }
+];
 
 const authMiddleware = (req, res, next) => {
-    // 현재 요청 경로가 openPaths 중 하나로 시작하는지 검사
-    const isExcluded = openPaths.some(path => req.path.startsWith(path));
+    // 현재 요청이 openRoutes에 포함되는지 확인
+    const isExcluded = openRoutes.some(route =>
+        req.path.startsWith(route.path) && req.method === route.method
+    );
+
     if (isExcluded) {
         return next(); // 인증 생략
     }
