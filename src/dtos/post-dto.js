@@ -3,6 +3,9 @@ class PostDTO {
     constructor({
                     id,
                     userId = null,
+                    name = null,
+                    email = null,
+                    phone = null,
                     userName = null,
                     category,
                     title,
@@ -14,6 +17,9 @@ class PostDTO {
                 }) {
         this.id = id;               // BIGINT
         this.userId = userId;       // BIGINT | null
+        this.name = name;       
+        this.email = email;       
+        this.phone = phone;      
         this.userName = userName;   // BIGINT | null (필요시 string으로 변경)
         this.category = category;   // 'notice' | 'free' | 'review' | 'inquiry'
         this.title = title;         // VARCHAR(200)

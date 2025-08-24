@@ -6,7 +6,8 @@ const openRoutes = [
     { path: '/sign/up', method: 'POST' },
     { path: '/posts/free', method: 'GET' },
     { path: '/posts/notice', method: 'GET' },
-    { path: '/posts/review', method: 'GET' }
+    { path: '/posts/review', method: 'GET' },
+    { path: '/posts/inquiry', method: 'POST' }
 ];
 
 const authMiddleware = (req, res, next) => {

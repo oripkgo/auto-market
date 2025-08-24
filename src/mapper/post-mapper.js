@@ -111,6 +111,8 @@ const findById = async (id) => {
 const insert = async (post) => {
     const {
         userId = null,
+        email = null,
+        phone = null,
         category,
         title,
         content

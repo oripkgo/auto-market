@@ -9,7 +9,30 @@ const getPostById = async (id) => {
 };
 
 const createPost = async (postData) => {
+
+    
+    if( postData.category === 'inquiry' ){
+        if (!postData.email || !postData.phone) {
+            throw new Error('email, phone는 필수입니다.');
+        }
+
+
+
+        postData.title = "고객 문의";
+
+        postData.content = `
+                이름 : ${postData.name}<br>
+                이메일 : ${postData.email}<br>
+                휴대폰번호 : ${postData.phone}
+                <br><br>
+                ${postData.content}
+            `;
+        
+    }
+
     const {category, title, content} = postData;
+
+
     if (!category || !title || !content) {
         throw new Error('category, title, content는 필수입니다.');
     }
